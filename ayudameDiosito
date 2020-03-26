@@ -1,0 +1,464 @@
+// CLASE MAIN
+package com.mycompany.dungeonmasterappalpha;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Principal {
+private static Inicio inicio;
+    public static void main(String[] args) {
+        int menu;
+        boolean exit = false;
+        ArrayList<Partida> listaPartidas = new ArrayList<>();
+
+        // Cargar archivo //
+        try {
+            JsonParser parser = new JsonParser();
+            BufferedReader bf = new BufferedReader(new FileReader("Partidas/Lista Partidas.json"));
+            JsonElement jElem = parser.parse(bf);
+            listaPartidas = new Gson().fromJson(jElem, new TypeToken<List<Partida>>() {
+            }.getType());
+        } catch (Exception e) {
+            //System.out.println("Hubo un error al extraer la informacion.");
+        }
+        // -------------- //
+
+        Interfaz interfaz = new Interfaz(listaPartidas);
+
+        do {
+            Scanner teclado = new Scanner(System.in);
+            System.out.println("[CLASE 'Principal']");
+            System.out.println("1.- Crear Nueva Partida.");
+            System.out.println("2.- Cargar Partida.");
+            System.out.println("3.- Borrar Partida.");
+            System.out.println("0.- Salir.");
+
+            menu = teclado.nextInt();
+            System.out.println("");
+
+            switch (menu) {
+                case 1:
+                    inicio =new Inicio();
+                    inicio.setVisible(true);
+                    break;
+                case 2:
+                    interfaz.cargarPartida();
+                    break;
+                case 3:
+                    interfaz.borrarPartida();
+                    break;
+                case 0:
+                    exit = true;
+                    break;
+                default:
+                    System.out.println("Introduzca un número para escoger una opción." + "\n");
+                    break;
+            }
+        } while (exit == false);
+    }
+
+}
+
+
+//CLASE INTERFAZ
+package com.mycompany.dungeonmasterappalpha;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Interfaz {
+
+    public ArrayList<Partida> listaPartidas;
+    
+    private static InterfazCrear crear;
+
+    public Interfaz(ArrayList listaPartidas) {
+        this.listaPartidas = listaPartidas;
+    }
+
+    public Interfaz() {
+    }
+
+    // case 1:
+    
+    public void crearPartida(String n) {
+        Partida p = new Partida(n);
+        p.llamar();
+        listaPartidas.add(p);
+        guardarListaPartidas();
+    }
+
+    // case 2:
+    public void cargarPartida() {
+        Scanner teclado = new Scanner(System.in);
+        int escogerPartida;
+        boolean menuPartidas = false;
+
+        if (listaPartidas.isEmpty()) {
+            System.out.println("No hay partidas registradas." + "\n");
+        } else {
+            do {
+                for (int i = 0; i < listaPartidas.size(); i++) {
+                    System.out.println((i + 1) + ".- '" + listaPartidas.get(i) + "'");
+                }
+                System.out.println("0.- Salir.");
+                escogerPartida = teclado.nextInt();
+                System.out.println("");
+
+                if (escogerPartida < 0 || escogerPartida > listaPartidas.size()) {
+                    System.out.println("Introduzca un número para escoger una partida." + "\n");
+                } else if (escogerPartida > 0 && escogerPartida <= listaPartidas.size()) {
+
+                    listaPartidas.get(escogerPartida - 1).llamar();
+
+                    guardarListaPartidas();
+                    menuPartidas = true;
+                } else {
+                    menuPartidas = true;
+                }
+
+            } while (menuPartidas == false);
+        }
+    }
+
+    // case 3:
+    public void borrarPartida() {
+        Scanner teclado = new Scanner(System.in);
+        int escogerPartida;
+        int clear;
+        String partidaBorrada;
+        boolean menuPartidas = false;
+        boolean menuClear;
+
+        if (listaPartidas.isEmpty()) {
+            System.out.println("No hay partidas registradas." + "\n");
+        } else {
+            do {
+                for (int i = 0; i < listaPartidas.size(); i++) {
+                    System.out.println((i + 1) + ".- '" + listaPartidas.get(i) + "'");
+                }
+                System.out.println(listaPartidas.size() + 1 + ".- Borrar TODAS las partidas.");
+                System.out.println("0.- Salir.");
+                escogerPartida = teclado.nextInt();
+                System.out.println("");
+
+                if (escogerPartida < 0 || escogerPartida > listaPartidas.size() + 1) {
+                    System.out.println("Introduzca un número para escoger una opción." + "\n");
+                } else if (escogerPartida > 0 && escogerPartida <= listaPartidas.size()) {
+                    partidaBorrada = listaPartidas.get(escogerPartida - 1).getNombrePartida();
+                    listaPartidas.remove(escogerPartida - 1);
+                    System.out.println("Partida '" + partidaBorrada + "' eliminada correctamente." + "\n");
+
+                    guardarListaPartidas();
+                } else if (escogerPartida == listaPartidas.size() + 1) {
+                    do {
+                        System.out.println("Se borrarán TODAS las partidas guardadas. ¿Está seguro?");
+                        System.out.println("1.- Sí.");
+                        System.out.println("2.- No.");
+                        clear = teclado.nextInt();
+                        System.out.println("");
+
+                        switch (clear) {
+                            case 1:
+                                listaPartidas.clear();
+                                System.out.println("Se han borrado todas las partidas correctamente." + "\n");
+                                guardarListaPartidas();
+                                menuClear = true;
+                                break;
+                            case 2:
+                                menuClear = true;
+                                break;
+                            default:
+                                System.out.println("Introduzca un número para escoger una opción." + "\n");
+                                menuClear = false;
+                                break;
+                        }
+                    } while (menuClear == false);
+                } else {
+                    menuPartidas = true;
+                }
+
+                if (listaPartidas.isEmpty()) {
+                    menuPartidas = true;
+                }
+
+            } while (menuPartidas == false);
+        }
+    }
+
+    public void guardarListaPartidas() {
+        FileWriter writer;
+
+        // Configurar archivo //
+        try {
+            writer = new FileWriter("Partidas/Lista Partidas.json");
+            Gson jsonObject = new GsonBuilder().create();
+            jsonObject.toJson(listaPartidas, writer);
+            writer.close();
+        } catch (IOException ex) {
+            //Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            System.out.println("Hubo problemas con el archivo.");
+        }
+        // ------------------ //
+    }
+
+}
+
+//CLASE INTERFAZCREAR
+package com.mycompany.dungeonmasterappalpha;
+
+import javax.swing.JTextField;
+
+
+
+
+public class InterfazCrear extends javax.swing.JFrame {
+private  Interfaz interfaz;
+
+
+    public InterfazCrear() {
+        initComponents();
+    }
+
+
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        jLabel1 = new javax.swing.JLabel();
+        txtNombrePartida = new javax.swing.JTextField();
+        btnComenzar = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabel1.setText("Ingrese Nombre de la Partida");
+
+        txtNombrePartida.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtNombrePartidaActionPerformed(evt);
+            }
+        });
+
+        btnComenzar.setText("Comenzar");
+        btnComenzar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnComenzarActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(txtNombrePartida, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(68, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnComenzar)
+                .addGap(19, 19, 19))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addComponent(txtNombrePartida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 48, Short.MAX_VALUE)
+                .addComponent(btnComenzar)
+                .addGap(20, 20, 20))
+        );
+
+        pack();
+    }// </editor-fold>                        
+
+    private void txtNombrePartidaActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+    }                                                
+
+    private void btnComenzarActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        String nombre =txtNombrePartida.getText();
+        interfaz.crearPartida(nombre);
+
+    } 
+   
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(InterfazCrear.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(InterfazCrear.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(InterfazCrear.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(InterfazCrear.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new InterfazCrear().setVisible(true);
+            }
+        });
+    }
+
+    public JTextField getTxtNombrePartida() {
+        return txtNombrePartida;
+    }
+    
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JButton btnComenzar;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JTextField txtNombrePartida;
+    // End of variables declaration                   
+}
+
+//CLASE INICIO
+package com.mycompany.dungeonmasterappalpha;
+
+/**
+ *
+ * @author monca
+ */
+public class Inicio extends javax.swing.JFrame {
+
+    private InterfazCrear creo;
+    private InterfazCargar cargo;
+    
+    public Inicio() {
+        initComponents();
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        btnCrear = new javax.swing.JButton();
+        btnCargar = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        btnCrear.setText("Crear Partida");
+        btnCrear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCrearActionPerformed(evt);
+            }
+        });
+
+        btnCargar.setText("Cargar Partida");
+        btnCargar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCargarActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(141, 141, 141)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnCargar)
+                    .addComponent(btnCrear))
+                .addContainerGap(156, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap(121, Short.MAX_VALUE)
+                .addComponent(btnCrear)
+                .addGap(28, 28, 28)
+                .addComponent(btnCargar)
+                .addGap(105, 105, 105))
+        );
+
+        pack();
+    }// </editor-fold>                        
+
+    private void btnCargarActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        cargo = new InterfazCargar();
+        cargo.setVisible(true);
+        setVisible(false);
+    }                                         
+
+    private void btnCrearActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        creo = new InterfazCrear();
+        creo.setVisible(true);
+        setVisible(false);
+    }                                        
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Inicio().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JButton btnCargar;
+    private javax.swing.JButton btnCrear;
+    // End of variables declaration                   
+} 
